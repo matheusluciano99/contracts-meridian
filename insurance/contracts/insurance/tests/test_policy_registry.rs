@@ -6,7 +6,7 @@ use soroban_sdk::{testutils::Address as _, Env, Address, String};
 #[test]
 fn test_activate_policy() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, PolicyRegistryContract);
+    let contract_id = env.register(PolicyRegistryContract, ());
     let client = PolicyRegistryContractClient::new(&env, &contract_id);
 
     let user = Address::generate(&env);
@@ -28,7 +28,7 @@ fn test_activate_policy() {
 #[test]
 fn test_pause_policy() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, PolicyRegistryContract);
+    let contract_id = env.register(PolicyRegistryContract, ());
     let client = PolicyRegistryContractClient::new(&env, &contract_id);
 
     let user = Address::generate(&env);
@@ -46,7 +46,7 @@ fn test_pause_policy() {
 #[test]
 fn test_get_policy_non_existing() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, PolicyRegistryContract);
+    let contract_id = env.register(PolicyRegistryContract, ());
     let client = PolicyRegistryContractClient::new(&env, &contract_id);
 
     let policy = client.get_policy(&999);

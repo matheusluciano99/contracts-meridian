@@ -1,5 +1,4 @@
-#![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Env, Symbol, String, Address, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Symbol, String, Address};
 
 #[contracttype]
 #[derive(Clone)]
@@ -17,10 +16,10 @@ pub struct PolicyRegistryContract;
 #[contractimpl]
 impl PolicyRegistryContract {
     pub fn activate_policy(env: Env, user: Address, product: String, amount: i128, payment_ref: String) -> u64 {
-        let id = env.storage().instance().get::<Symbol, u64>(&Symbol::short("next_id")).unwrap_or(1);
+        let id = env.storage().instance().get::<Symbol, u64>(&symbol_short!("next_id")).unwrap_or(1);
         let policy = Policy { id, user: user.clone(), product, amount, status: String::from_str(&env, "ACTIVE") };
         env.storage().persistent().set(&id, &policy);
-        env.storage().instance().set(&Symbol::short("next_id"), &(id+1));
+        env.storage().instance().set(&symbol_short!("next_id"), &(id+1));
         env.events().publish(("PolicyActivated",), (id, user, amount, payment_ref));
         id
     }

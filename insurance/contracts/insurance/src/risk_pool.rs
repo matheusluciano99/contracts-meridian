@@ -1,5 +1,4 @@
-#![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Env, Address, Symbol};
+use soroban_sdk::{contract, contractimpl, contracttype, Env, Address};
 
 #[contract]
 pub struct RiskPoolContract;

@@ -6,7 +6,7 @@ use soroban_sdk::{testutils::Address as _, Env, Address};
 #[test]
 fn test_collect_premium_increases_balance() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, RiskPoolContract);
+    let contract_id = env.register(RiskPoolContract, ());
     let client = RiskPoolContractClient::new(&env, &contract_id);
 
     let user = Address::generate(&env);
@@ -30,7 +30,7 @@ fn test_collect_premium_increases_balance() {
 #[test]
 fn test_payout_reduces_balance() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, RiskPoolContract);
+    let contract_id = env.register(RiskPoolContract, ());
     let client = RiskPoolContractClient::new(&env, &contract_id);
 
     let user = Address::generate(&env);
@@ -50,7 +50,7 @@ fn test_payout_reduces_balance() {
 #[should_panic(expected = "Pool sem fundos")]
 fn test_payout_fails_if_insufficient_balance() {
     let env = Env::default();
-    let contract_id = env.register_contract(None, RiskPoolContract);
+    let contract_id = env.register(RiskPoolContract, ());
     let client = RiskPoolContractClient::new(&env, &contract_id);
 
     let user = Address::generate(&env);
