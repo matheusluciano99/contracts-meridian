@@ -1,4 +1,4 @@
-# Soroban Project
+# Soroban Insurance Contracts
 
 ## Project Structure
 
@@ -6,16 +6,86 @@ This repository uses the recommended structure for a Soroban project:
 ```text
 .
 ├── contracts
-│   └── hello_world
+│   └── insurance
 │       ├── src
 │       │   ├── lib.rs
-│       │   └── test.rs
+│       │   ├── policy_registry.rs
+│       │   └── risk_pool.rs
 │       └── Cargo.toml
 ├── Cargo.toml
 └── README.md
 ```
 
-- New Soroban contracts can be put in `contracts`, each in their own directory. There is already a `hello_world` contract in there to get you started.
-- If you initialized this project with any other example contracts via `--with-example`, those contracts will be in the `contracts` directory as well.
-- Contracts should have their own `Cargo.toml` files that rely on the top-level `Cargo.toml` workspace for their dependencies.
-- Frontend libraries can be added to the top-level directory as well. If you initialized this project with a frontend template via `--frontend-template` you will have those files already included.
+## Deploy dos Contratos
+
+### 🚀 Método Recomendado: Soroban CLI
+
+1. **Verificar instalação do Soroban CLI**:
+```bash
+soroban --version
+```
+
+2. **Executar deploy**:
+```bash
+./deploy-soroban.sh
+```
+
+O script irá:
+- ✅ Fazer build dos contratos
+- ✅ Configurar rede testnet
+- ✅ Solicitar credenciais da conta
+- ✅ Deploy PolicyRegistry
+- ✅ Deploy RiskPool
+- 📋 **Mostrar Contract IDs**
+
+### 🔧 Método Manual (Soroban CLI)
+
+Se preferir fazer manualmente:
+
+```bash
+# Build
+soroban contract build
+
+# Adicionar rede
+soroban config network add testnet \
+    --rpc-url https://soroban-testnet.stellar.org \
+    --network-passphrase "Test SDF Network ; September 2015"
+
+# Adicionar conta
+soroban keys add testnet --secret-key
+
+# Deploy contratos
+POLICY_ID=$(soroban contract deploy --wasm target/wasm32v1-none/release/insurance.wasm --source testnet --network testnet)
+RISK_POOL_ID=$(soroban contract deploy --wasm target/wasm32v1-none/release/insurance.wasm --source testnet --network testnet)
+```
+
+## Contratos Disponíveis
+
+### PolicyRegistry
+- **Funções**: `activate_policy`, `pause_policy`, `get_policy`
+- **Propósito**: Gerenciar apólices de seguro
+
+### RiskPool
+- **Funções**: `collect_premium`, `payout`, `get_balance`
+- **Propósito**: Gerenciar pool de risco e pagamentos
+
+## Testes
+
+```bash
+# Executar todos os testes
+cargo test
+
+# Testes específicos
+cd contracts/insurance
+cargo test
+```
+
+## Desenvolvimento
+
+```bash
+# Formatar código
+cargo fmt --all
+
+# Limpar builds
+cargo clean
+```
