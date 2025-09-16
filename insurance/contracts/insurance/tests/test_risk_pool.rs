@@ -77,7 +77,6 @@ fn test_collect_premium_with_ref_idempotent() {
     env.mock_all_auths();
     client.init(&admin);
     client.collect_premium_with_ref(&user, &100, &SorobanString::from_str(&env, "refX"));
-    // segunda vez mesma ref - não deve aumentar
     client.collect_premium_with_ref(&user, &100, &SorobanString::from_str(&env, "refX"));
     assert_eq!(client.get_balance(), 100);
 }
