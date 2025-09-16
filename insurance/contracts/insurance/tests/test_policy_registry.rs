@@ -8,6 +8,10 @@ fn test_activate_policy() {
     let env = Env::default();
     let contract_id = env.register(PolicyRegistryContract, ());
     let client = PolicyRegistryContractClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    // Mock auth for admin (test environment) so init can require_auth successfully
+    env.mock_all_auths();
+    client.init_policy_registry(&admin);
 
     let user = Address::generate(&env);
     let product = String::from_str(&env, "Insurance");
@@ -22,7 +26,7 @@ fn test_activate_policy() {
     assert_eq!(policy.user, user);
     assert_eq!(policy.product, product);
     assert_eq!(policy.amount, amount);
-    assert_eq!(policy.status, String::from_str(&env, "ACTIVE"));
+    assert!(policy.active, "Policy should be active after activation");
 }
 
 #[test]
@@ -30,6 +34,9 @@ fn test_pause_policy() {
     let env = Env::default();
     let contract_id = env.register(PolicyRegistryContract, ());
     let client = PolicyRegistryContractClient::new(&env, &contract_id);
+    let admin = Address::generate(&env);
+    env.mock_all_auths();
+    client.init_policy_registry(&admin);
 
     let user = Address::generate(&env);
     let product = String::from_str(&env, "Insurance");
@@ -37,10 +44,10 @@ fn test_pause_policy() {
     let payment_ref = String::from_str(&env, "ref123");
 
     let id = client.activate_policy(&user, &product, &amount, &payment_ref);
-    client.pause_policy(&id);
+    client.pause_policy(&admin, &id);
 
     let policy = client.get_policy(&id).unwrap();
-    assert_eq!(policy.status, String::from_str(&env, "PAUSED"));
+    assert!(!policy.active, "Policy should be inactive after pause");
 }
 
 #[test]

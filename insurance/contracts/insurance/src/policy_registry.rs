@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Symbol, String, Address};
+use soroban_sdk::{contract, contractimpl, contracttype, Env, Symbol, String, Address};
 
 #[contracttype]
 #[derive(Clone)]
@@ -21,7 +21,7 @@ pub enum DataKey {
 
 #[contractimpl]
 impl PolicyRegistryContract {
-    pub fn init(env: Env, admin: Address) {
+    pub fn init_policy_registry(env: Env, admin: Address) {
         if env.storage().instance().has(&DataKey::Admin) { panic!("already initialized"); }
         admin.require_auth();
         env.storage().instance().set(&DataKey::Admin, &admin);
@@ -68,5 +68,5 @@ impl PolicyRegistryContract {
     }
 
     pub fn get_policy(env: Env, policy_id: u64) -> Option<Policy> { env.storage().persistent().get(&policy_id) }
-    pub fn get_admin(env: Env) -> Address { Self::read_admin(&env) }
+    pub fn policy_admin(env: Env) -> Address { Self::read_admin(&env) }
 }
