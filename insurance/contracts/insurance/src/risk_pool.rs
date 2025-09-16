@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractimpl, contracttype, Env, Address};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Symbol, String};
 
 #[contract]
 pub struct RiskPoolContract;
@@ -6,27 +6,57 @@ pub struct RiskPoolContract;
 #[contracttype]
 pub enum DataKey {
     PoolBalance,
+    Admin,
 }
 
 #[contractimpl]
 impl RiskPoolContract {
-    pub fn collect_premium(env: Env, from: Address, amount: i128) {
-        // Aqui chamaríamos o contrato USDC (SAC) para transferir do user → pool
-        let balance: i128 = env.storage().instance().get(&DataKey::PoolBalance).unwrap_or(0);
-        let new_balance = balance + amount;
-        env.storage().instance().set(&DataKey::PoolBalance, &new_balance);
-        env.events().publish(("PremiumCollected",), (from, amount));
+    // Inicialização: define admin e zera pool. Só pode ser chamada uma vez.
+    pub fn init(env: Env, admin: Address) {
+        if env.storage().instance().has(&DataKey::Admin) { panic!("already initialized"); }
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Admin, &admin);
+        env.storage().instance().set(&DataKey::PoolBalance, &0i128);
+        env.events().publish((Symbol::new(&env, "pool_initialized"),), admin);
     }
 
-    pub fn payout(env: Env, to: Address, amount: i128) {
-        let balance: i128 = env.storage().instance().get(&DataKey::PoolBalance).unwrap_or(0);
-        assert!(balance >= amount, "Pool sem fundos");
-        let new_balance = balance - amount;
-        env.storage().instance().set(&DataKey::PoolBalance, &new_balance);
-        env.events().publish(("PayoutExecuted",), (to, amount));
-    }
-
-    pub fn get_balance(env: Env) -> i128 {
+    fn read_balance(env: &Env) -> i128 {
         env.storage().instance().get(&DataKey::PoolBalance).unwrap_or(0)
     }
+
+    fn write_balance(env: &Env, value: i128) {
+        env.storage().instance().set(&DataKey::PoolBalance, &value);
+    }
+
+    fn read_admin(env: &Env) -> Address {
+        env.storage().instance().get(&DataKey::Admin).expect("not initialized")
+    }
+
+    fn assert_admin(env: &Env, caller: &Address) {
+        let admin = Self::read_admin(env);
+        caller.require_auth();
+        assert!(admin == *caller, "not admin");
+    }
+
+    // Coleta de prêmio: apenas acumula XLM lógico (stroops externos convertidos previamente no backend).
+    pub fn collect_premium(env: Env, from: Address, amount: i128) {
+        // (Opcional) poderíamos exigir auth do pagador, mas para MVP backend poderá chamar.
+        let balance = Self::read_balance(&env);
+        let new_balance = balance + amount;
+        Self::write_balance(&env, new_balance);
+        env.events().publish((Symbol::new(&env, "premium_collected"),), (from, amount, new_balance));
+    }
+
+    // Payout: protegido por admin.
+    pub fn payout(env: Env, caller: Address, to: Address, amount: i128) {
+        Self::assert_admin(&env, &caller);
+        let balance = Self::read_balance(&env);
+        assert!(balance >= amount, "insufficient pool");
+        let new_balance = balance - amount;
+        Self::write_balance(&env, new_balance);
+        env.events().publish((Symbol::new(&env, "payout_executed"),), (to, amount, new_balance));
+    }
+
+    pub fn get_balance(env: Env) -> i128 { Self::read_balance(&env) }
+    pub fn get_admin(env: Env) -> Address { Self::read_admin(&env) }
 }
